@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>WaitWise — Accessible</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#F5D5D0;--card:#fff;--red:#E8321A;--text:#1a1a1a;--muted:#666;--border:#e8dbd8;--green:#22c55e;--navy:#1a1a2e}
+body{font-family:'DM Sans',sans-serif;background:#d4a8a0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.phone{width:390px;height:844px;background:var(--bg);border-radius:48px;box-shadow:0 40px 80px rgba(0,0,0,.3),0 0 0 10px #111,0 0 0 12px #2a2a2a;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.sb{display:flex;justify-content:space-between;align-items:center;padding:14px 26px 0;flex-shrink:0}
+.sb-icon{width:32px;height:32px;border-radius:50%;border:2px solid var(--text);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:background .2s;position:relative}
+.sb-icon:hover{background:rgba(0,0,0,.07)}
+.notif-dot{position:absolute;top:-2px;right:-2px;width:9px;height:9px;background:var(--red);border-radius:50%;border:2px solid var(--bg)}
+.sb-time{font-size:15px;font-weight:600}
+.app-hdr{display:flex;align-items:center;justify-content:center;position:relative;padding:6px 24px 0;flex-shrink:0}
+.app-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--red);letter-spacing:1px}
+.close-btn{position:absolute;right:22px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:18px;color:var(--muted);cursor:pointer}
+.close-btn.vis{display:flex}
+.screen{display:none;flex:1;flex-direction:column;padding:0 22px 18px;overflow-y:auto;overflow-x:hidden}
+.screen.active{display:flex;animation:sIn .22s ease}
+@keyframes sIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+.screen::-webkit-scrollbar{width:3px}
+.screen::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:10px}
+.bottom-nav{display:flex;background:#fff;border-top:1px solid var(--border);flex-shrink:0;border-radius:0 0 48px 48px;overflow:hidden}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 0 13px;cursor:pointer;font-size:9px;font-weight:600;color:var(--muted);transition:color .2s;gap:3px;position:relative}
+.nav-item.active{color:var(--red)}
+.nav-icon{font-size:18px}
+.nav-badge{position:absolute;top:5px;right:calc(50% - 15px);background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+.card{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 3px 14px rgba(0,0,0,.07)}
+.sec-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.row-between{display:flex;align-items:center;justify-content:space-between}
+.toggle{width:44px;height:24px;background:#ddd;border-radius:20px;cursor:pointer;position:relative;transition:background .3s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{left:23px}
+/* Search */
+.search-lbl{font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.search-wrap{position:relative}
+.search-box{width:100%;background:#ede5e2;border:none;border-radius:40px;padding:13px 18px 13px 42px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:background .2s}
+.search-box:focus{background:#e2d8d5}
+.search-wrap::before{content:'🔍';position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none}
+.sugs{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.13);z-index:50;overflow:hidden}
+.sug-item{padding:11px 16px;font-size:13px;cursor:pointer;border-bottom:1px solid #f5f0ee;display:flex;align-items:center;gap:10px;transition:background .15s}
+.sug-item:last-child{border-bottom:none}
+.sug-item:hover{background:#fdf0ee}
+.rec-banner{border-radius:16px;padding:14px 16px;margin-top:14px;display:flex;align-items:flex-start;gap:12px;flex-shrink:0}
+.rec-banner.wait{background:#e8f5e9;border:1.5px solid #a5d6a7}
+.rec-banner.cab{background:#fff3e0;border:1.5px solid #ffcc80}
+.rec-icon{font-size:26px;flex-shrink:0}
+.rec-title{font-size:15px;font-weight:700;color:var(--text)}
+.rec-sub{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5}
+.bus-card{background:var(--card);border-radius:20px;padding:16px;margin-top:12px;box-shadow:0 4px 18px rgba(0,0,0,.07);flex:1}
+.bus-card h3{font-size:17px;font-weight:700}
+.bus-card .sub{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:12px}
+.bus-row{display:flex;align-items:center;gap:10px;padding:10px 8px;margin:0 -8px;border-bottom:1px solid #f5eeec;cursor:pointer;border-radius:10px;transition:background .15s}
+.bus-row:last-child{border-bottom:none}
+.bus-row:hover{background:rgba(0,0,0,.03)}
+.dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.dot.r{background:#E8321A}.dot.y{background:#f59e0b}.dot.g{background:#22c55e}
+.dashes{flex:1;border-top:2px dashed #ddd;margin:0 4px}
+.bus-meta{text-align:right}
+.bus-chip{display:inline-flex;align-items:center;border:2px solid var(--text);border-radius:40px;padding:6px 18px;font-size:14px;font-weight:700;margin-top:14px;flex-shrink:0}
+.arriving{font-family:'DM Serif Display',serif;font-size:32px;color:var(--text);margin-top:10px;line-height:1.1;flex-shrink:0}
+.occ-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-shrink:0}
+.occ-row span{font-size:15px;font-weight:600}
+.conf-badge{display:inline-flex;align-items:center;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;margin-top:6px;flex-shrink:0}
+.conf-badge.hi{background:#d4f4e0;color:#1a7a42}
+.conf-badge.md{background:#fff3d4;color:#7a5a1a}
+.conf-badge.lo{background:#fde8e8;color:#7a1a1a}
+.eta-bar{background:#fff;border-radius:14px;padding:11px 15px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-shrink:0}
+.eta-prog{flex:1;height:5px;background:#f0e8e5;border-radius:10px;margin:0 12px;overflow:hidden}
+.eta-fill{height:100%;background:var(--red);border-radius:10px;transition:width 1s linear}
+.map-box{background:#c8d8e4;border-radius:16px;margin-top:10px;height:130px;overflow:hidden;position:relative;flex-shrink:0}
+.fake-map{width:100%;height:100%;position:relative;overflow:hidden;background:#c8d8e4}
+.map-road{position:absolute;background:#a8b8c4}
+.map-road.h{height:7px;left:0;right:0}
+.map-road.v{width:7px;top:0;bottom:0}
+.map-lbl{position:absolute;background:white;border-radius:6px;padding:2px 6px;font-size:9px;font-weight:700;box-shadow:0 2px 5px rgba(0,0,0,.12)}
+.bus-mkr{position:absolute;background:var(--red);color:#fff;border-radius:7px;padding:2px 7px;font-size:10px;font-weight:700;animation:pulse 2s infinite}
+.dest-pin{position:absolute;width:16px;height:16px;background:var(--red);border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 5px rgba(0,0,0,.25)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.surge-row{background:#fff;border-radius:14px;margin-top:10px;padding:11px 15px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-shrink:0}
+.surge-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.surge-apps{display:flex;gap:8px}
+.surge-app{flex:1;background:var(--bg);border-radius:12px;padding:7px 8px;text-align:center}
+.surge-app-name{font-size:10px;font-weight:700;color:var(--muted)}
+.surge-price{font-size:14px;font-weight:700;color:var(--text);margin-top:2px}
+.surge-pill{font-size:9px;padding:2px 6px;border-radius:10px;font-weight:700;margin-top:3px;display:inline-block}
+.s-normal{background:#d4f4e0;color:#1a7a42}
+.s-high{background:#fde8e8;color:#7a1a1a}
+.fare-section{margin-top:10px;flex-shrink:0}
+.fare-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-bottom:1px solid rgba(0,0,0,.05)}
+.fare-row:last-child{border-bottom:none}
+.fb-bar{background:#fff;border-radius:14px;margin-top:8px;padding:11px 15px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-shrink:0;display:none}
+.fb-bar.show{display:block}
+.fb-q{font-size:13px;font-weight:600;margin-bottom:8px}
+.fb-btns{display:flex;gap:8px}
+.fb-btn{flex:1;padding:8px;border-radius:20px;border:1.5px solid var(--border);font-size:12px;font-weight:600;background:transparent;cursor:pointer;font-family:inherit;transition:all .2s}
+.fb-btn:hover,.fb-btn.sel{background:var(--red);color:#fff;border-color:var(--red)}
+.actions{margin-top:10px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.btn-p{width:100%;padding:14px;background:var(--text);border:none;border-radius:40px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;color:#fff}
+.btn-s{width:100%;padding:14px;background:transparent;border:2.5px solid var(--text);border-radius:40px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--text);transition:all .2s}
+.btn-s:hover{background:var(--text);color:#fff}
+/* Safety / History / Weather — shared */
+.wx-hero{background:linear-gradient(135deg,#1565c0,#1976d2);border-radius:20px;padding:20px;margin-top:16px;color:#fff;flex-shrink:0;position:relative;overflow:hidden}
+.wx-hero::after{content:'☁';position:absolute;font-size:80px;right:-10px;top:-10px;opacity:.12;pointer-events:none}
+.wx-chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.wx-chip{background:rgba(255,255,255,.18);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px}
+.cond-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f5eeec}
+.cond-row:last-child{border-bottom:none}
+.cond-badge{font-size:11px;padding:3px 10px;border-radius:10px;font-weight:700;margin-left:auto;flex-shrink:0;align-self:center}
+.cond-ok{background:#d4f4e0;color:#1a7a42}
+.cond-warn{background:#fff3d4;color:#7a5a1a}
+.notif-card{background:var(--card);border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;align-items:flex-start;gap:12px;cursor:pointer;position:relative;overflow:hidden}
+.notif-card.unread::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:60%;background:var(--red);border-radius:0 4px 4px 0}
+.ni-wrap{width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ni-bus{background:#fde8e8}.ni-safe{background:#e8f5e9}.ni-save{background:#fff3e0}.ni-info{background:#e3f2fd}
+.safety-hero{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:20px;padding:20px;margin-top:16px;color:#fff;flex-shrink:0}
+.contact-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f5f0ee;cursor:pointer}
+.contact-row:last-child{border-bottom:none}
+.sos-btn{width:100%;padding:16px;background:#E8321A;border:none;border-radius:40px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;color:#fff;margin-top:12px;flex-shrink:0}
+.stats-row{display:flex;gap:10px;margin-top:12px;flex-shrink:0}
+.stat-card{flex:1;background:var(--card);border-radius:14px;padding:13px 10px;box-shadow:0 2px 8px rgba(0,0,0,.06);text-align:center}
+.stat-num{font-family:'DM Serif Display',serif;font-size:24px;color:var(--red)}
+.stat-lbl{font-size:10px;color:var(--muted);font-weight:500;margin-top:3px}
+.hist-card{background:#fff;border-radius:16px;padding:13px 15px;margin-top:9px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+.hist-ico{font-size:20px;width:38px;height:38px;background:var(--bg);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hist-pill{font-size:10px;padding:3px 9px;border-radius:10px;font-weight:700;margin-top:4px;display:inline-block}
+.pill-bus{background:#d4f4e0;color:#1a7a42}
+.pill-cab{background:#fff3d4;color:#7a5a1a}
+.profile-hero{background:var(--navy);border-radius:20px;padding:20px;margin-top:16px;color:#fff;display:flex;align-items:center;gap:16px;flex-shrink:0}
+.pref-card{background:var(--card);border-radius:18px;padding:4px 0;box-shadow:0 3px 14px rgba(0,0,0,.07);margin-top:8px;flex-shrink:0;overflow:hidden}
+.pref-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #f5eeec;cursor:pointer;transition:background .15s}
+.pref-row:last-child{border-bottom:none}
+.pref-row:hover{background:#fdf8f7}
+.pref-ico{font-size:18px;width:34px;height:34px;border-radius:11px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pref-lbl{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.pref-val{font-size:13px;color:var(--muted)}
+/* ── RELIABILITY SCORE ── */
+.rel-card{background:var(--card);border-radius:16px;padding:14px 16px;margin-top:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-shrink:0}
+.rel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.rel-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.rel-score-big{font-family:'DM Serif Display',serif;font-size:28px;color:var(--text)}
+.rel-score-pct{font-size:13px;color:var(--muted);font-weight:500}
+.rel-badge{font-size:11px;font-weight:700;padding:3px 11px;border-radius:12px}
+.rel-great{background:#d4f4e0;color:#1a7a42}
+.rel-ok{background:#fff3d4;color:#7a5a1a}
+.rel-poor{background:#fde8e8;color:#7a1a1a}
+.rel-bar-wrap{background:#f0e8e5;border-radius:6px;height:8px;overflow:hidden;margin-bottom:10px}
+.rel-bar{height:100%;border-radius:6px;transition:width .8s ease}
+.rel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rel-cell{background:var(--bg);border-radius:12px;padding:9px 11px}
+.rel-cell-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.rel-cell-val{font-size:13px;font-weight:700;color:var(--text)}
+.rel-history{margin-top:10px}
+.rel-hist-label{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.rel-dots{display:flex;gap:4px;align-items:flex-end;height:32px}
+.rel-dot{flex:1;border-radius:3px;min-width:0;transition:height .4s ease}
+.rel-days{display:flex;gap:4px;margin-top:3px}
+.rel-day{flex:1;font-size:9px;color:var(--muted);text-align:center}
+.tagline{text-align:center;font-size:12px;font-weight:700;color:var(--text);padding:10px 0 4px;flex-shrink:0;opacity:.7}
+.toast{position:absolute;bottom:85px;left:50%;transform:translateX(-50%) translateY(10px);background:#1a1a1a;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;white-space:nowrap;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:200}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── AI ENGINE PANEL ── */
+.ai-panel{background:linear-gradient(135deg,#1a1a2e,#2d2060);border-radius:16px;padding:14px 16px;margin-top:10px;flex-shrink:0;color:#fff}
+.ai-panel-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.ai-chip{background:rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.04em;color:#fff}
+.ai-panel-title{font-size:13px;font-weight:700;color:#fff;flex:1}
+.ai-score-ring{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;border:3px solid rgba(255,255,255,.3)}
+.ai-factors{display:flex;flex-direction:column;gap:7px}
+.ai-factor{display:flex;align-items:center;gap:8px}
+.ai-factor-label{font-size:11px;color:rgba(255,255,255,.7);width:90px;flex-shrink:0}
+.ai-factor-bar-wrap{flex:1;background:rgba(255,255,255,.12);border-radius:4px;height:5px;overflow:hidden}
+.ai-factor-bar{height:100%;border-radius:4px;transition:width .7s ease}
+.ai-factor-val{font-size:11px;font-weight:700;color:#fff;width:30px;text-align:right;flex-shrink:0}
+.ai-verdict{margin-top:12px;padding:10px 14px;background:rgba(255,255,255,.1);border-radius:12px;font-size:13px;color:rgba(255,255,255,.9);line-height:1.55}
+.ai-verdict strong{color:#fff}
+.ai-learn{font-size:11px;color:rgba(255,255,255,.5);margin-top:8px;text-align:right}
+
+/* ══════════════════════════════════════════
+   ACCESSIBILITY MODE STYLES
+══════════════════════════════════════════ */
+
+/* ── Mode selector screen ── */
+.acc-hero{background:linear-gradient(160deg,#1a1a2e 0%,#2d1b4e 100%);border-radius:22px;padding:22px 20px;margin-top:16px;flex-shrink:0;color:#fff;text-align:center}
+.acc-hero-icon{font-size:44px;margin-bottom:10px}
+.acc-hero-title{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:6px}
+.acc-hero-sub{font-size:13px;opacity:.75;line-height:1.6}
+.acc-mode-btn{width:100%;background:var(--card);border:none;border-radius:20px;padding:18px 20px;margin-top:12px;display:flex;align-items:center;gap:16px;cursor:pointer;box-shadow:0 3px 14px rgba(0,0,0,.08);transition:transform .15s,box-shadow .15s;text-align:left;font-family:inherit}
+.acc-mode-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.acc-mode-icon{font-size:32px;width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.acc-mode-icon.elder{background:#fff3e0}
+.acc-mode-icon.blind{background:#e8f5e9}
+.acc-mode-icon.deaf{background:#e3f2fd}
+.acc-mode-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px}
+.acc-mode-sub{font-size:12px;color:var(--muted);line-height:1.45}
+.acc-mode-arrow{font-size:20px;color:#ccc;margin-left:auto;flex-shrink:0}
+.acc-back{width:100%;padding:12px;background:transparent;border:2px solid var(--border);border-radius:40px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--muted);margin-top:14px;flex-shrink:0}
+
+/* ── ELDER MODE ── */
+.elder-screen{display:none;flex:1;flex-direction:column;overflow-y:auto;background:#FFF8F0}
+.elder-screen.active{display:flex}
+.elder-screen::-webkit-scrollbar{width:3px}
+.elder-topbar{background:#fff;padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:2px solid #f0e0d0}
+.elder-topbar-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--red)}
+.elder-mode-tag{background:#fff3e0;color:#c84b00;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px}
+.elder-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px;flex:1}
+.elder-stop{background:#fff;border-radius:20px;padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 12px rgba(0,0,0,.08);cursor:pointer;border:2px solid #f0e0d0}
+.elder-stop-icon{font-size:28px;flex-shrink:0}
+.elder-stop-label{font-size:13px;color:var(--muted);font-weight:500}
+.elder-stop-val{font-size:18px;font-weight:700;color:var(--text);margin-top:2px}
+/* Big answer */
+.elder-answer{border-radius:24px;padding:24px 20px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.1)}
+.elder-answer.wait{background:linear-gradient(135deg,#e8f5e9,#c8e6c9)}
+.elder-answer.cab{background:linear-gradient(135deg,#fff3e0,#ffe0b2)}
+.elder-answer-icon{font-size:56px;margin-bottom:10px}
+.elder-answer-verdict{font-family:'DM Serif Display',serif;font-size:30px;color:var(--text);margin-bottom:8px}
+.elder-answer-eta{font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px}
+.elder-answer-save{font-size:15px;color:#2e7d32;font-weight:600}
+/* Bus selector */
+.elder-bus-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.elder-bus-item{background:#fff;border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(0,0,0,.07);cursor:pointer;border:3px solid transparent;transition:border-color .2s,transform .15s;margin-bottom:8px}
+.elder-bus-item:hover{transform:translateY(-1px)}
+.elder-bus-item.sel{border-color:var(--red)}
+.elder-bus-circle{width:18px;height:18px;border-radius:50%;flex-shrink:0}
+.elder-bus-num{font-size:18px;font-weight:700;color:var(--text)}
+.elder-bus-time{font-size:14px;color:var(--muted);margin-top:2px}
+.elder-bus-arr{font-size:14px;font-weight:600;margin-left:auto;flex-shrink:0}
+/* Action buttons */
+.elder-speak{width:100%;padding:18px;background:#fff;border:3px solid var(--red);border-radius:20px;font-size:18px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--red);display:flex;align-items:center;justify-content:center;gap:10px}
+.elder-wait-btn{width:100%;padding:20px;background:#2e7d32;border:none;border-radius:20px;font-size:20px;font-weight:700;font-family:inherit;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px}
+.elder-cab-btn{width:100%;padding:20px;background:#e65100;border:none;border-radius:20px;font-size:20px;font-weight:700;font-family:inherit;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px}
+.elder-sos{width:100%;padding:18px;background:#E8321A;border:none;border-radius:20px;font-size:20px;font-weight:700;font-family:inherit;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px}
+.elder-back-lnk{text-align:center;font-size:14px;color:var(--muted);cursor:pointer;text-decoration:underline;padding:4px 0}
+
+/* ── BLIND / VISUAL IMPAIRMENT MODE ── */
+.blind-screen{display:none;flex:1;flex-direction:column;overflow-y:auto;background:#111}
+.blind-screen.active{display:flex}
+.blind-topbar{background:#000;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.blind-topbar-title{font-family:'DM Serif Display',serif;font-size:20px;color:#fff}
+.blind-mode-tag{background:#00c853;color:#000;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px}
+.blind-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px;flex:1}
+/* Big speak button */
+.blind-speak-hero{background:#00c853;border-radius:24px;padding:30px 20px;text-align:center;cursor:pointer;transition:transform .15s;border:none;width:100%;font-family:inherit}
+.blind-speak-hero:active{transform:scale(.97)}
+.blind-speak-icon{font-size:60px;display:block;margin-bottom:12px}
+.blind-speak-label{font-size:22px;font-weight:700;color:#000;display:block}
+.blind-speak-sub{font-size:14px;color:rgba(0,0,0,.7);margin-top:6px;display:block}
+/* Info card high contrast */
+.blind-info{background:#1a1a1a;border-radius:20px;padding:20px;border:3px solid #00c853}
+.blind-info-label{font-size:12px;font-weight:700;color:#00c853;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.blind-info-val{font-size:28px;font-weight:700;color:#fff;line-height:1.2}
+.blind-info-sub{font-size:14px;color:rgba(255,255,255,.6);margin-top:6px}
+/* Large action buttons */
+.blind-btn{width:100%;padding:22px;border:none;border-radius:20px;font-size:20px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;transition:transform .15s}
+.blind-btn:active{transform:scale(.97)}
+.blind-btn-wait{background:#00c853;color:#000}
+.blind-btn-cab{background:#fff;color:#000}
+.blind-btn-sos{background:#E8321A;color:#fff}
+.blind-back-lnk{text-align:center;font-size:14px;color:rgba(255,255,255,.5);cursor:pointer;text-decoration:underline;padding:4px 0}
+
+/* ── DEAF / SPEECH IMPAIRED MODE ── */
+.deaf-screen{display:none;flex:1;flex-direction:column;overflow-y:auto;background:#E8F4FD}
+.deaf-screen.active{display:flex}
+.deaf-topbar{background:#1565c0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.deaf-topbar-title{font-family:'DM Serif Display',serif;font-size:20px;color:#fff}
+.deaf-mode-tag{background:#fff;color:#1565c0;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px}
+.deaf-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px;flex:1}
+/* Visual big answer */
+.deaf-answer{border-radius:24px;padding:26px 20px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.1)}
+.deaf-answer.wait{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border:3px solid #2e7d32}
+.deaf-answer.cab{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:3px solid #e65100}
+.deaf-answer-icon{font-size:64px;margin-bottom:10px;display:block}
+.deaf-answer-verdict{font-size:28px;font-weight:700;color:var(--text);margin-bottom:6px}
+.deaf-answer-eta{font-size:16px;color:var(--muted);font-weight:500}
+/* Visual signal cards */
+.deaf-signals{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.deaf-signal{background:#fff;border-radius:16px;padding:14px 12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.deaf-signal-icon{font-size:30px;margin-bottom:6px;display:block}
+.deaf-signal-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.deaf-signal-val{font-size:15px;font-weight:700;color:var(--text)}
+/* Visual bus strips */
+.deaf-bus-strip{background:#fff;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);cursor:pointer;border:3px solid transparent;transition:border-color .2s;margin-bottom:8px}
+.deaf-bus-strip.sel{border-color:#1565c0}
+.deaf-bus-circle{width:20px;height:20px;border-radius:50%;flex-shrink:0}
+.deaf-bus-num{font-size:16px;font-weight:700;color:var(--text)}
+.deaf-bus-time{font-size:13px;color:var(--muted)}
+.deaf-bus-badge{margin-left:auto;font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;flex-shrink:0}
+.db-best{background:#d4f4e0;color:#1a7a42}
+.db-long{background:#fff3d4;color:#7a5a1a}
+.db-vlong{background:#fde8e8;color:#7a1a1a}
+/* Large visual buttons */
+.deaf-btn{width:100%;padding:18px;border:none;border-radius:20px;font-size:18px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.deaf-btn-wait{background:#2e7d32;color:#fff}
+.deaf-btn-cab{background:#e65100;color:#fff}
+.deaf-btn-sos{background:#E8321A;color:#fff}
+/* Flash alert */
+.deaf-flash{border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600}
+.deaf-flash.info{background:#e3f2fd;border:2px solid #90caf9;color:#1565c0}
+.deaf-flash.warning{background:#fff3d4;border:2px solid #ffcc80;color:#7a5a1a}
+.deaf-back-lnk{text-align:center;font-size:14px;color:var(--muted);cursor:pointer;text-decoration:underline;padding:4px 0}
+
+/* Vibrate animation for visual alerts */
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.4}}
+.deaf-flash.pulse{animation:flash 1s ease-in-out 3}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+
+  <!-- Status bar -->
+  <div class="sb" id="main-sb">
+    <div class="sb-icon" onclick="goNav('profile')">👤</div>
+    <span class="sb-time" id="clock">09:51 PM</span>
+    <div class="sb-icon" onclick="goNav('notif')">🔔<div class="notif-dot" id="notif-dot"></div></div>
+  </div>
+  <div class="app-hdr" id="main-hdr">
+    <div class="app-title">WAIT WISE</div>
+    <div class="close-btn" id="closeBtn" onclick="goHome()">✕</div>
+  </div>
+
+  <!-- ══ HOME ══════════════════════════════════ -->
+  <div class="screen active" id="screen-home">
+    <div style="margin-top:18px"><div class="search-lbl">Enter pickup point</div><div class="search-wrap"><input class="search-box" id="pickup" autocomplete="off" onfocus="showSug('pickup')" onblur="hideSug('pickup')" oninput="filterSug('pickup',this.value)"><div class="sugs" id="pickup-sug" style="display:none"></div></div></div>
+    <div style="margin-top:12px"><div class="search-lbl">Enter drop point</div><div class="search-wrap"><input class="search-box" id="drop" autocomplete="off" onfocus="showSug('drop')" onblur="hideSug('drop')" oninput="filterSug('drop',this.value)"><div class="sugs" id="drop-sug" style="display:none"></div></div></div>
+    <div class="rec-banner wait" id="rec-banner"><div class="rec-icon">🚌</div><div><div class="rec-title">Recommendation: Wait for Bus 378</div><div class="rec-sub">Arrives in 9 min · saves ~₹180 · worth the wait</div></div></div>
+    <div class="bus-card"><h3>Upcoming Buses</h3><div class="sub">Tap a bus to see the full decision</div>
+      <div class="bus-row" onclick="showDetail(0)"><span style="font-size:21px;width:28px;text-align:center">🚌</span><div class="dot r"></div><div class="dashes"></div><div class="bus-meta"><div style="font-size:13px;font-weight:700">10:00 PM</div><div style="font-size:10px;color:var(--muted)">Bus 378 · 9 min</div></div></div>
+      <div class="bus-row" onclick="showDetail(1)"><span style="font-size:21px;width:28px;text-align:center">🚌</span><div class="dot y"></div><div class="dashes"></div><div class="bus-meta"><div style="font-size:13px;font-weight:700">10:45 PM</div><div style="font-size:10px;color:var(--muted)">Bus 377 · 54 min</div></div></div>
+      <div class="bus-row" onclick="showDetail(2)"><span style="font-size:21px;width:28px;text-align:center">🚌</span><div class="dot g"></div><div class="dashes"></div><div class="bus-meta"><div style="font-size:13px;font-weight:700">11:10 PM</div><div style="font-size:10px;color:var(--muted)">Bus 378 · 79 min</div></div></div>
+    </div>
+    <div class="tagline">Know your ride · Save your time</div>
+  </div>
+
+  <!-- ══ DETAIL ═════════════════════════════════ -->
+  <div class="screen" id="screen-detail">
+    <div class="bus-chip" id="d-chip">Bus No. 378</div>
+    <div class="arriving" id="d-arr">Arriving in 9 min</div>
+    <div class="occ-row"><div class="dot r" id="d-dot"></div><span id="d-occ">Occupancy : Full</span></div>
+    <div class="conf-badge lo" id="d-conf">⚠ Low confidence — GPS 8 min old</div>
+    <div class="eta-bar"><div><div style="font-size:12px;color:var(--muted);font-weight:500">Countdown</div><div style="font-family:'DM Serif Display',serif;font-size:21px;color:var(--red)" id="eta-disp">09:00</div></div><div class="eta-prog"><div class="eta-fill" id="eta-fill" style="width:85%"></div></div><span style="font-size:11px;color:var(--muted);font-weight:600" id="eta-pct">85%</span></div>
+    <div class="map-box"><div class="fake-map" id="det-map"></div></div>
+    <div class="surge-row"><div class="surge-title">Live cab fares</div><div class="surge-apps">
+      <div class="surge-app"><div class="surge-app-name">🟢 Ola</div><div class="surge-price" id="ola-p">₹210</div><div class="surge-pill s-normal" id="ola-s">Normal</div></div>
+      <div class="surge-app"><div class="surge-app-name">⚫ Uber</div><div class="surge-price" id="uber-p">₹245</div><div class="surge-pill s-normal" id="uber-s">Normal</div></div>
+      <div class="surge-app"><div class="surge-app-name">🔵 Rapido</div><div class="surge-price" id="rap-p">₹180</div><div class="surge-pill s-normal" id="rap-s">Normal</div></div>
+    </div></div>
+    <div class="fare-section"><div class="fare-row"><span>Bus Fare</span><span style="font-weight:700">Rs. 30</span></div><div class="fare-row"><span style="color:var(--green);font-weight:700">You save</span><span style="font-weight:700;color:var(--green)" id="d-save">Rs. 150–265</span></div></div>
+
+    <!-- RELIABILITY SCORE CARD -->
+    <div class="rel-card" id="rel-card">
+      <div class="rel-header">
+        <div>
+          <div class="rel-title">Route reliability score</div>
+          <div style="display:flex;align-items:baseline;gap:6px;margin-top:3px">
+            <div class="rel-score-big" id="rel-pct-num">82%</div>
+            <div class="rel-score-pct" id="rel-pct-lbl">on time · weekday evenings</div>
+          </div>
+        </div>
+        <div class="rel-badge rel-great" id="rel-badge">Reliable</div>
+      </div>
+      <div class="rel-bar-wrap"><div class="rel-bar" id="rel-bar" style="width:82%;background:var(--green)"></div></div>
+      <div class="rel-grid">
+        <div class="rel-cell"><div class="rel-cell-lbl">Avg delay</div><div class="rel-cell-val" id="rel-delay">+2.4 min</div></div>
+        <div class="rel-cell"><div class="rel-cell-lbl">Skipped stops</div><div class="rel-cell-val" id="rel-skip">3% of trips</div></div>
+        <div class="rel-cell"><div class="rel-cell-lbl">Peak hours</div><div class="rel-cell-val" id="rel-peak">More delays</div></div>
+        <div class="rel-cell"><div class="rel-cell-lbl">Based on</div><div class="rel-cell-val" id="rel-sample">847 trips</div></div>
+      </div>
+      <div class="rel-history">
+        <div class="rel-hist-label">Last 7 days — on-time rate</div>
+        <div class="rel-dots" id="rel-dots"></div>
+        <div class="rel-days" id="rel-days"></div>
+      </div>
+    </div>
+
+    <!-- AI ENGINE PANEL -->
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-panel-header">
+        <span class="ai-chip">🧠 AI Engine</span>
+        <span class="ai-panel-title">Decision factors</span>
+        <div class="ai-score-ring" id="ai-score-ring">82</div>
+      </div>
+      <div class="ai-factors" id="ai-factors"></div>
+      <div class="ai-verdict" id="ai-verdict"></div>
+      <div class="ai-learn" id="ai-learn">Trained on 847 trips · accuracy 87%</div>
+    </div>
+
+    <div class="actions"><button class="btn-s" onclick="handleCab()">Take a Cab</button><button class="btn-p" onclick="handleWait()">Wait for Bus</button></div>
+    <div class="fb-bar" id="fb-bar"><div class="fb-q">Was this recommendation helpful?</div><div class="fb-btns"><button class="fb-btn" onclick="giveFb(this,'yes')">👍 Yes</button><button class="fb-btn" onclick="giveFb(this,'no')">👎 No</button><button class="fb-btn" onclick="giveFb(this,'skip')">Skip</button></div></div>
+    <div class="tagline">Know your ride · Save your time</div>
+  </div>
+
+  <!-- ══ WEATHER ════════════════════════════════ -->
+  <div class="screen" id="screen-weather">
+    <div class="wx-hero"><div style="font-size:12px;font-weight:600;opacity:.8;margin-bottom:4px">📍 Majestic Bus Stand, Bangalore</div><div style="font-family:'DM Serif Display',serif;font-size:48px;line-height:1;color:#fff">26°C</div><div style="font-size:13px;margin-top:6px;opacity:.85;color:#fff">Partly cloudy · Feels like 29°C</div><div class="wx-chips"><div class="wx-chip">💧 68%</div><div class="wx-chip">🌬 12 km/h</div><div class="wx-chip">🌧 10% rain</div></div></div>
+    <div class="card" style="margin-top:12px"><div style="font-size:13px;color:var(--muted);margin-bottom:8px">Overall wait comfort score</div><div style="font-family:'DM Serif Display',serif;font-size:32px">7.2 <span style="font-size:16px;color:var(--muted)">/10</span></div><div style="background:#f0e8e5;border-radius:10px;height:10px;overflow:hidden;margin:8px 0"><div style="width:72%;height:100%;border-radius:10px;background:linear-gradient(90deg,#E8321A,#f59e0b,#22c55e)"></div></div><div style="font-size:12px;color:var(--muted)">Decent conditions for waiting up to 12 minutes.</div></div>
+    <div class="card" style="margin-top:12px"><div style="font-size:15px;font-weight:700;margin-bottom:12px">Stop conditions</div>
+      <div class="cond-row"><div style="font-size:20px;width:30px">💡</div><div><div style="font-size:13px;font-weight:600">Lighting</div><div style="font-size:12px;color:var(--muted)">Well-lit, CCTV present</div></div><div class="cond-badge cond-ok">Good</div></div>
+      <div class="cond-row"><div style="font-size:20px;width:30px">👥</div><div><div style="font-size:13px;font-weight:600">Footfall</div><div style="font-size:12px;color:var(--muted)">~8 people waiting now</div></div><div class="cond-badge cond-ok">Active</div></div>
+      <div class="cond-row"><div style="font-size:20px;width:30px">🌧</div><div><div style="font-size:13px;font-weight:600">Rain risk</div><div style="font-size:12px;color:var(--muted)">Low chance next 30 min</div></div><div class="cond-badge cond-ok">Clear</div></div>
+      <div class="cond-row"><div style="font-size:20px;width:30px">🚧</div><div><div style="font-size:13px;font-weight:600">Traffic</div><div style="font-size:12px;color:var(--muted)">Moderate on route</div></div><div class="cond-badge cond-warn">Moderate</div></div>
+    </div>
+    <div class="tagline">Know your ride · Save your time</div>
+  </div>
+
+  <!-- ══ NOTIFICATIONS ══════════════════════════ -->
+  <div class="screen" id="screen-notif">
+    <div style="margin-top:18px;margin-bottom:4px"><div class="row-between"><div><div style="font-size:20px;font-weight:700">Notifications</div><div style="font-size:13px;color:var(--muted);margin-top:3px">Stay updated on your buses</div></div><div style="font-size:13px;color:var(--red);font-weight:600;cursor:pointer" onclick="clearNotifs()">Clear all</div></div></div>
+    <div id="notif-list">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px">Today</div>
+      <div class="notif-card unread" onclick="markRead(this)"><div class="ni-wrap ni-bus">🚌</div><div><div style="font-size:13px;font-weight:700">Bus 378 is running 4 min late</div><div style="font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5">Majestic → Koramangala. Updated ETA: 10:04 PM.</div><div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:500">2 min ago</div></div></div>
+      <div class="notif-card unread" onclick="markRead(this)"><div class="ni-wrap ni-safe">🛡</div><div><div style="font-size:13px;font-weight:700">Safety mode auto-activated</div><div style="font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5">It's past 10 PM. Priya has been notified.</div><div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:500">8 min ago</div></div></div>
+      <div class="notif-card unread" onclick="markRead(this)"><div class="ni-wrap ni-save">💰</div><div><div style="font-size:13px;font-weight:700">You saved ₹170 tonight!</div><div style="font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5">Total this month: ₹840.</div><div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:500">25 min ago</div></div></div>
+    </div>
+    <div class="tagline">Know your ride · Save your time</div>
+  </div>
+
+  <!-- ══ SAFETY ═════════════════════════════════ -->
+  <div class="screen" id="screen-safety">
+    <div class="safety-hero"><h2 style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:6px">Night Safety Mode</h2><p style="font-size:13px;opacity:.7;line-height:1.5">Share your live location with trusted contacts while you wait or travel.</p><div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><span style="font-size:14px;font-weight:600;color:#fff">Safety Mode</span><div class="toggle on" id="safety-toggle" onclick="toggleSafety()"></div></div></div>
+    <div class="card" style="margin-top:12px"><div style="font-size:14px;font-weight:700;margin-bottom:10px">Trusted Contacts</div>
+      <div class="contact-row" onclick="showToast('Location shared with Priya!')"><div style="width:36px;height:36px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👩</div><div><div style="font-size:14px;font-weight:600">Priya (Sister)</div><div style="font-size:11px;color:var(--muted)">Notified when safety mode is on</div></div></div>
+      <div class="contact-row" onclick="showToast('Location shared with Amma!')"><div style="width:36px;height:36px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👩‍🦳</div><div><div style="font-size:14px;font-weight:600">Amma (Mom)</div><div style="font-size:11px;color:var(--muted)">Notified when safety mode is on</div></div></div>
+    </div>
+    <button class="sos-btn" onclick="showToast('SOS sent to Priya and Amma!')">🆘  Send SOS Now</button>
+    <div class="tagline">Know your ride · Save your time</div>
+  </div>
+
+  <!-- ══ HISTORY ════════════════════════════════ -->
+  <div class="screen" id="screen-history">
+    <div style="margin-top:18px"><div style="font-size:20px;font-weight:700">Your Trips</div><div style="font-size:13px;color:var(--muted);margin-top:3px">Decisions, time and money saved</div></div>
+    <div class="stats-row"><div class="stat-card"><div class="stat-num">12</div><div class="stat-lbl">Trips this month</div></div><div class="stat-card"><div class="stat-num">₹840</div><div class="stat-lbl">Saved vs cab</div></div><div class="stat-card"><div class="stat-num">87%</div><div class="stat-lbl">Rec accuracy</div></div></div>
+    <div class="hist-card" onclick="showToast('Full details coming soon!')"><div class="hist-ico">🚌</div><div><div style="font-size:13px;font-weight:700">Majestic → Koramangala</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Today · Bus 378 · 9 min wait</div><div class="hist-pill pill-bus">Waited for bus ✓</div><div style="font-size:11px;color:var(--green);font-weight:700;margin-top:3px">Saved ₹170 vs Ola</div></div></div>
+    <div class="hist-card" onclick="showToast('Full details coming soon!')"><div class="hist-ico">🚕</div><div><div style="font-size:13px;font-weight:700">MG Road → Indiranagar</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Yesterday · Bus 54 min away</div><div class="hist-pill pill-cab">Took cab — right call</div></div></div>
+    <div class="tagline">Know your ride · Save your time</div>
+  </div>
+
+  <!-- ══ PROFILE ════════════════════════════════ -->
+  <div class="screen" id="screen-profile">
+    <div class="profile-hero"><div style="width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid rgba(255,255,255,.3)">🧑</div><div><div style="font-size:17px;font-weight:700">Ashan Shetty</div><div style="font-size:12px;opacity:.7;margin-top:3px">Bangalore commuter · Since Jul 2024</div></div></div>
+    <div class="stats-row"><div class="stat-card"><div class="stat-num">47</div><div class="stat-lbl">Total trips</div></div><div class="stat-card"><div class="stat-num">₹3.2k</div><div class="stat-lbl">Total saved</div></div><div class="stat-card"><div class="stat-num">89%</div><div class="stat-lbl">Accuracy</div></div></div>
+    <div class="sec-title" style="margin-top:14px">Preferences</div>
+    <div class="pref-card">
+      <div class="pref-row"><div class="pref-ico">🏠</div><span class="pref-lbl">Home stop</span><span class="pref-val">Majestic</span><span style="font-size:16px;color:#ccc">›</span></div>
+      <div class="pref-row"><div class="pref-ico">💼</div><span class="pref-lbl">Work stop</span><span class="pref-val">Koramangala</span><span style="font-size:16px;color:#ccc">›</span></div>
+      <div class="pref-row"><div class="pref-ico">🔔</div><span class="pref-lbl">Bus delay alerts</span><div class="toggle on" onclick="showToast('Alert saved')"></div></div>
+      <div class="pref-row"><div class="pref-ico">🌙</div><span class="pref-lbl">Night mode (after 9 PM)</span><div class="toggle on"></div></div>
+    </div>
+    <div class="sec-title" style="margin-top:12px">Accessibility</div>
+    <div class="pref-card">
+      <div class="pref-row" onclick="goNav('access')"><div class="pref-ico">♿</div><span class="pref-lbl">Accessibility modes</span><span class="pref-val" style="color:var(--red);font-weight:600">3 modes</span><span style="font-size:16px;color:#ccc">›</span></div>
+    </div>
+    <div class="sec-title" style="margin-top:12px">App</div>
+    <div class="pref-card">
+      <div class="pref-row" onclick="goNav('notif')"><div class="pref-ico">🔔</div><span class="pref-lbl">Notifications</span><span class="pref-val" id="notif-count-lbl">3 unread</span><span style="font-size:16px;color:#ccc">›</span></div>
+      <div class="pref-row" onclick="showToast('Version 4.0.0')"><div class="pref-ico">ℹ</div><span class="pref-lbl">About WaitWise</span><span class="pref-val">v4.0</span><span style="font-size:16px;color:#ccc">›</span></div>
+    </div>
+    <button style="width:100%;padding:14px;background:transparent;border:2px solid #fde8e8;border-radius:40px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--red);margin-top:12px" onclick="showToast('See you soon! 👋')">Sign out</button>
+    <div class="tagline">Know your ride · Save your time</div>
+  </div>
+
+  <!-- ══ ACCESSIBILITY MODE SELECTOR ═══════════ -->
+  <div class="screen" id="screen-access">
+    <div class="acc-hero">
+      <div class="acc-hero-icon">♿</div>
+      <div class="acc-hero-title">Accessibility Modes</div>
+      <div class="acc-hero-sub">WaitWise is designed for everyone. Choose the mode that works best for you or someone you're helping.</div>
+    </div>
+
+    <button class="acc-mode-btn" onclick="goMode('elder')">
+      <div class="acc-mode-icon elder">👴</div>
+      <div>
+        <div class="acc-mode-title">Elder Mode</div>
+        <div class="acc-mode-sub">Large text, simple buttons, Read Aloud feature. Designed for older adults and anyone who prefers a simpler interface.</div>
+      </div>
+      <div class="acc-mode-arrow">›</div>
+    </button>
+
+    <button class="acc-mode-btn" onclick="goMode('blind')">
+      <div class="acc-mode-icon blind">👁</div>
+      <div>
+        <div class="acc-mode-title">Visual Impairment Mode</div>
+        <div class="acc-mode-sub">High contrast dark screen, extra large text, voice readout on tap. For low vision or blind users.</div>
+      </div>
+      <div class="acc-mode-arrow">›</div>
+    </button>
+
+    <button class="acc-mode-btn" onclick="goMode('deaf')">
+      <div class="acc-mode-icon deaf">🤝</div>
+      <div>
+        <div class="acc-mode-title">Deaf / Speech Impaired Mode</div>
+        <div class="acc-mode-sub">100% visual — no audio needed. Bold colour signals, flash alerts, and large icons replace all sound cues.</div>
+      </div>
+      <div class="acc-mode-arrow">›</div>
+    </button>
+
+    <button class="acc-back" onclick="goNav('profile')">← Back to Profile</button>
+    <div class="tagline">Know your ride · Save your time</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       ELDER MODE SCREEN
+  ══════════════════════════════════════════ -->
+  <div class="elder-screen" id="screen-elder">
+    <div class="elder-topbar">
+      <div class="elder-topbar-title">WAIT WISE</div>
+      <div class="elder-mode-tag">👴 Elder Mode</div>
+    </div>
+    <div class="elder-body">
+
+      <div class="elder-stop" onclick="showToast('Tap to change your stop')">
+        <div class="elder-stop-icon">📍</div>
+        <div>
+          <div class="elder-stop-label">You are at</div>
+          <div class="elder-stop-val">Majestic Bus Stop</div>
+        </div>
+        <span style="font-size:20px;color:#ccc;margin-left:auto">›</span>
+      </div>
+
+      <div class="elder-answer wait" id="elder-ans">
+        <div class="elder-answer-icon">🚌</div>
+        <div class="elder-answer-verdict">Wait for the Bus</div>
+        <div class="elder-answer-eta" id="elder-eta-txt">Bus arrives in 9 minutes</div>
+        <div class="elder-answer-save">You save ₹150 to ₹265</div>
+      </div>
+
+      <div>
+        <div class="elder-bus-title">Choose a bus</div>
+        <div class="elder-bus-item sel" id="eb-0" onclick="pickElderBus(0)">
+          <div class="elder-bus-circle" style="background:#E8321A"></div>
+          <div><div class="elder-bus-num">Bus 378</div><div class="elder-bus-time">Arrives very soon</div></div>
+          <div class="elder-bus-arr" style="color:#2e7d32;font-weight:700">9 min ✓</div>
+        </div>
+        <div class="elder-bus-item" id="eb-1" onclick="pickElderBus(1)">
+          <div class="elder-bus-circle" style="background:#f59e0b"></div>
+          <div><div class="elder-bus-num">Bus 377</div><div class="elder-bus-time">Long wait</div></div>
+          <div class="elder-bus-arr" style="color:#7a5a1a">54 min</div>
+        </div>
+        <div class="elder-bus-item" id="eb-2" onclick="pickElderBus(2)">
+          <div class="elder-bus-circle" style="background:#22c55e"></div>
+          <div><div class="elder-bus-num">Bus 378</div><div class="elder-bus-time">Very long wait</div></div>
+          <div class="elder-bus-arr" style="color:#7a1a1a">79 min</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="elder-speak" onclick="elderSpeak()">🔊  Read This Out Loud</button>
+        <button class="elder-wait-btn" onclick="showToast('Good! Your family has been notified you are waiting. 🚌')">✅  I Will Wait for Bus</button>
+        <button class="elder-cab-btn" onclick="showToast('Calling a cab for you now... 🚕')">🚕  Book a Cab for Me</button>
+      </div>
+
+      <button class="elder-sos" onclick="showToast('SOS sent to Priya and Amma! They will call you. 🆘')">🆘  Emergency — Call My Family</button>
+      <div class="elder-back-lnk" onclick="goBack()">← Back to regular mode</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       BLIND / VISUAL IMPAIRMENT MODE SCREEN
+  ══════════════════════════════════════════ -->
+  <div class="blind-screen" id="screen-blind">
+    <div class="blind-topbar">
+      <div class="blind-topbar-title">WAIT WISE</div>
+      <div class="blind-mode-tag">👁 Vision Mode</div>
+    </div>
+    <div class="blind-body">
+
+      <button class="blind-speak-hero" onclick="blindSpeak()">
+        <span class="blind-speak-icon">🔊</span>
+        <span class="blind-speak-label">TAP TO HEAR YOUR OPTIONS</span>
+        <span class="blind-speak-sub">Double tap anywhere to hear the decision again</span>
+      </button>
+
+      <div class="blind-info">
+        <div class="blind-info-label">Decision for you right now</div>
+        <div class="blind-info-val" id="blind-verdict">WAIT FOR THE BUS</div>
+        <div class="blind-info-sub" id="blind-sub">Bus 378 arrives in 9 minutes. You save ₹180 by waiting.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="blind-info" style="border-color:#fff3">
+          <div class="blind-info-label" style="color:rgba(255,255,255,.6)">Bus arrives in</div>
+          <div class="blind-info-val" style="font-size:36px" id="blind-eta">09:00</div>
+        </div>
+        <div class="blind-info" style="border-color:#fff3">
+          <div class="blind-info-label" style="color:rgba(255,255,255,.6)">You save</div>
+          <div class="blind-info-val" style="font-size:28px;color:#00c853">₹180</div>
+        </div>
+      </div>
+
+      <button class="blind-btn blind-btn-wait" onclick="showToast('Waiting for bus. Your contacts have been notified.')">✅  WAIT FOR BUS</button>
+      <button class="blind-btn blind-btn-cab" onclick="showToast('Booking cab for you now...')">🚕  BOOK A CAB</button>
+      <button class="blind-btn blind-btn-sos" onclick="showToast('SOS sent to family! 🆘')">🆘  EMERGENCY SOS</button>
+
+      <div class="blind-back-lnk" onclick="goBack()">← Back to regular mode</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       DEAF / SPEECH IMPAIRED MODE SCREEN
+  ══════════════════════════════════════════ -->
+  <div class="deaf-screen" id="screen-deaf">
+    <div class="deaf-topbar">
+      <div class="deaf-topbar-title">WAIT WISE</div>
+      <div class="deaf-mode-tag">🤝 Visual Mode</div>
+    </div>
+    <div class="deaf-body">
+
+      <!-- Flash alert banner -->
+      <div class="deaf-flash info" id="deaf-flash">
+        <span style="font-size:22px">ℹ</span>
+        <div>
+          <div style="font-weight:700">No sound needed</div>
+          <div style="font-size:12px;margin-top:2px">Everything here works with visuals only. Tap any button to act.</div>
+        </div>
+      </div>
+
+      <!-- Big visual answer -->
+      <div class="deaf-answer wait" id="deaf-ans">
+        <span class="deaf-answer-icon">🚌</span>
+        <div class="deaf-answer-verdict" id="deaf-verdict">WAIT FOR BUS</div>
+        <div class="deaf-answer-eta" id="deaf-eta-txt">Bus 378 arrives in 9 minutes</div>
+      </div>
+
+      <!-- Visual signal grid -->
+      <div class="deaf-signals">
+        <div class="deaf-signal">
+          <span class="deaf-signal-icon">⏱</span>
+          <div class="deaf-signal-label">Bus ETA</div>
+          <div class="deaf-signal-val" id="deaf-sig-eta">9 min</div>
+        </div>
+        <div class="deaf-signal">
+          <span class="deaf-signal-icon">💰</span>
+          <div class="deaf-signal-label">You save</div>
+          <div class="deaf-signal-val" style="color:var(--green)">₹180</div>
+        </div>
+        <div class="deaf-signal">
+          <span class="deaf-signal-icon">👥</span>
+          <div class="deaf-signal-label">Occupancy</div>
+          <div class="deaf-signal-val" style="color:var(--red)">Full</div>
+        </div>
+        <div class="deaf-signal">
+          <span class="deaf-signal-icon">✅</span>
+          <div class="deaf-signal-label">Confidence</div>
+          <div class="deaf-signal-val" style="color:var(--amber,#f59e0b)">Medium</div>
+        </div>
+      </div>
+
+      <!-- Visual bus selector -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Select your bus</div>
+        <div class="deaf-bus-strip sel" id="db-0" onclick="pickDeafBus(0)">
+          <div class="deaf-bus-circle" style="background:#E8321A"></div>
+          <div><div class="deaf-bus-num">Bus 378</div><div class="deaf-bus-time">Majestic → Koramangala</div></div>
+          <div class="deaf-bus-badge db-best">✓ Best</div>
+        </div>
+        <div class="deaf-bus-strip" id="db-1" onclick="pickDeafBus(1)">
+          <div class="deaf-bus-circle" style="background:#f59e0b"></div>
+          <div><div class="deaf-bus-num">Bus 377</div><div class="deaf-bus-time">54 minutes away</div></div>
+          <div class="deaf-bus-badge db-long">Long wait</div>
+        </div>
+        <div class="deaf-bus-strip" id="db-2" onclick="pickDeafBus(2)">
+          <div class="deaf-bus-circle" style="background:#22c55e"></div>
+          <div><div class="deaf-bus-num">Bus 378</div><div class="deaf-bus-time">79 minutes away</div></div>
+          <div class="deaf-bus-badge db-vlong">Very long</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="deaf-btn deaf-btn-wait" onclick="showToast('You chose to wait. Your stop has been noted. 🚌')">✅  WAIT FOR BUS</button>
+        <button class="deaf-btn deaf-btn-cab" onclick="showToast('Booking cab. No call needed — app will handle it. 🚕')">🚕  BOOK CAB (No call needed)</button>
+        <button class="deaf-btn deaf-btn-sos" onclick="deafSOS()">🆘  SILENT SOS — Alert Family</button>
+      </div>
+
+      <div class="deaf-back-lnk" onclick="goBack()">← Back to regular mode</div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav" id="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="goNav('home')"><span class="nav-icon">🏠</span>Home</div>
+    <div class="nav-item" id="nav-weather" onclick="goNav('weather')"><span class="nav-icon">🌤</span>Stop</div>
+    <div class="nav-item" id="nav-safety" onclick="goNav('safety')"><span class="nav-icon">🛡</span>Safety</div>
+    <div class="nav-item" id="nav-history" onclick="goNav('history')"><span class="nav-icon">📋</span>History</div>
+    <div class="nav-item" id="nav-profile" onclick="goNav('profile')"><span class="nav-icon">👤</span>Profile<div class="nav-badge" id="nav-badge">3</div></div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// Clock
+function tick(){const n=new Date();let h=n.getHours(),m=n.getMinutes();const ap=h>=12?'PM':'AM';h=h%12||12;document.getElementById('clock').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} ${ap}`}
+tick();setInterval(tick,30000);
+
+// Toast
+let toastT;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800)}
+
+// Nav — handles regular .screen divs
+function goNav(tab){
+  document.querySelectorAll('.screen,.elder-screen,.blind-screen,.deaf-screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  const ni=document.getElementById('nav-'+tab);if(ni)ni.classList.add('active');
+  document.getElementById('closeBtn').className='close-btn';
+  // show/hide standard chrome
+  const accModes=['elder','blind','deaf'];
+  const isAcc=accModes.includes(tab);
+  document.getElementById('main-sb').style.display=isAcc?'none':'flex';
+  document.getElementById('main-hdr').style.display=isAcc?'none':'flex';
+  document.getElementById('bottom-nav').style.display=isAcc?'none':'flex';
+}
+
+let prevTab='home';
+function goMode(mode){
+  prevTab=document.querySelector('.screen.active,.elder-screen.active,.blind-screen.active,.deaf-screen.active')?.id?.replace('screen-','')||'home';
+  document.querySelectorAll('.screen,.elder-screen,.blind-screen,.deaf-screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+mode).classList.add('active');
+  document.getElementById('main-sb').style.display='none';
+  document.getElementById('main-hdr').style.display='none';
+  document.getElementById('bottom-nav').style.display='none';
+  // start blind ETA timer if blind mode
+  if(mode==='blind')startBlindEta();
+}
+
+function goBack(){
+  document.querySelectorAll('.screen,.elder-screen,.blind-screen,.deaf-screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-access').classList.add('active');
+  document.getElementById('main-sb').style.display='flex';
+  document.getElementById('main-hdr').style.display='flex';
+  document.getElementById('bottom-nav').style.display='flex';
+  document.getElementById('nav-profile').classList.add('active');
+  clearInterval(blindEtaIv);
+}
+
+function goHome(){goNav('home');document.getElementById('fb-bar').classList.remove('show')}
+
+// Bus data
+const buses=[
+  {num:'Bus No. 378',arr:'Arriving in 9 min',occ:'Occupancy : Full',dc:'r',conf:'lo',confTxt:'⚠ Low confidence — GPS 8 min old',ola:'₹210',uber:'₹245',rap:'₹180',os:'Normal',us:'Normal',rs:'Normal',oc:'s-normal',uc:'s-normal',rc:'s-normal',save:'Rs. 150–265',eta:540,rec:{cls:'wait',ico:'🚌',title:'Recommendation: Wait for Bus 378',sub:'Arrives in 9 min · saves ~₹180'},
+   rel:{pct:82,lbl:'on time · weekday evenings',badge:'Reliable',badgeCls:'rel-great',barColor:'#22c55e',delay:'+2.4 min',skip:'3% of trips',peak:'More delays',sample:'847 trips',history:[78,85,80,90,75,88,82]}},
+  {num:'Bus No. 377',arr:'Arriving in 54 min',occ:'Occupancy : Standing',dc:'y',conf:'md',confTxt:'~ Medium confidence',ola:'₹260',uber:'₹290',rap:'₹220',os:'Normal',us:'Surge 1.2x',rs:'Normal',oc:'s-normal',uc:'s-high',rc:'s-normal',save:'Rs. 190–260',eta:3240,rec:{cls:'cab',ico:'🚕',title:'Recommendation: Take a Cab',sub:'54 min at 10:45 PM is too long'},
+   rel:{pct:61,lbl:'on time · weekday evenings',badge:'Unreliable',badgeCls:'rel-poor',barColor:'#E8321A',delay:'+8.1 min',skip:'12% of trips',peak:'Frequent delays',sample:'412 trips',history:[55,70,48,65,58,72,61]}},
+  {num:'Bus No. 378',arr:'Arriving in 79 min',occ:'Occupancy : Available',dc:'g',conf:'hi',confTxt:'✓ High confidence',ola:'₹300',uber:'₹355',rap:'₹270',os:'Normal',us:'Surge 1.4x',rs:'Normal',oc:'s-normal',uc:'s-high',rc:'s-normal',save:'Rs. 240–325',eta:4740,rec:{cls:'cab',ico:'🚕',title:'Recommendation: Take a Cab',sub:'79 min wait — cab is safer tonight'},
+   rel:{pct:74,lbl:'on time · weekday evenings',badge:'Moderate',badgeCls:'rel-ok',barColor:'#f59e0b',delay:'+4.7 min',skip:'7% of trips',peak:'Some delays',sample:'847 trips',history:[68,80,70,75,65,78,74]}}
+];
+let etaIv,curSecs,curBus;
+
+function showDetail(idx){
+  const b=buses[idx];curBus=b;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-detail').classList.add('active');
+  document.getElementById('closeBtn').className='close-btn vis';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('fb-bar').classList.remove('show');
+  document.getElementById('d-chip').textContent=b.num;
+  document.getElementById('d-arr').textContent=b.arr;
+  document.getElementById('d-dot').className='dot '+b.dc;
+  document.getElementById('d-occ').textContent=b.occ;
+  const cf=document.getElementById('d-conf');cf.className='conf-badge '+b.conf;cf.textContent=b.confTxt;
+  document.getElementById('ola-p').textContent=b.ola;document.getElementById('uber-p').textContent=b.uber;document.getElementById('rap-p').textContent=b.rap;
+  document.getElementById('ola-s').textContent=b.os;document.getElementById('ola-s').className='surge-pill '+b.oc;
+  document.getElementById('uber-s').textContent=b.us;document.getElementById('uber-s').className='surge-pill '+b.uc;
+  document.getElementById('rap-s').textContent=b.rs;document.getElementById('rap-s').className='surge-pill '+b.rc;
+  document.getElementById('d-save').textContent=b.save;
+  // ── AI ENGINE: weighted scoring ──────────────
+  const ai=runAI(b);
+  const rb=document.getElementById('rec-banner');rb.className='rec-banner '+ai.cls;
+  rb.innerHTML=`<div class="rec-icon">${ai.ico}</div><div><div class="rec-title">${ai.title}</div><div class="rec-sub">${ai.sub}</div></div>`;
+  renderAIPanel(ai,b);
+  clearInterval(etaIv);curSecs=b.eta;updEta();
+  etaIv=setInterval(()=>{if(curSecs>0){curSecs--;updEta()}},1000);
+  drawMap('det-map');
+  // Reliability score
+  const r=b.rel;
+  document.getElementById('rel-pct-num').textContent=r.pct+'%';
+  document.getElementById('rel-pct-lbl').textContent=r.lbl;
+  const rb2=document.getElementById('rel-badge');rb2.className='rel-badge '+r.badgeCls;rb2.textContent=r.badge;
+  const bar=document.getElementById('rel-bar');bar.style.width=r.pct+'%';bar.style.background=r.barColor;
+  document.getElementById('rel-delay').textContent=r.delay;
+  document.getElementById('rel-skip').textContent=r.skip;
+  document.getElementById('rel-peak').textContent=r.peak;
+  document.getElementById('rel-sample').textContent=r.sample;
+  // History sparkbar
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Today'];
+  const dotsEl=document.getElementById('rel-dots');
+  const daysEl=document.getElementById('rel-days');
+  const maxH=28;
+  dotsEl.innerHTML=r.history.map((v,i)=>{
+    const h=Math.round((v/100)*maxH);
+    const col=v>=80?'#22c55e':v>=65?'#f59e0b':'#E8321A';
+    const isToday=i===6;
+    return `<div class="rel-dot" style="height:${h}px;background:${col};opacity:${isToday?1:.55};border:${isToday?'2px solid '+col:'none'}"></div>`;
+  }).join('');
+  daysEl.innerHTML=days.map((d,i)=>`<div class="rel-day" style="${i===6?'color:var(--text);font-weight:700':''}">${d}</div>`).join('');
+}
+function updEta(){
+  const m=Math.floor(curSecs/60),s=curSecs%60;
+  document.getElementById('eta-disp').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const pct=Math.min(100,Math.round(curSecs/(curBus?curBus.eta:540)*100));
+  document.getElementById('eta-fill').style.width=pct+'%';
+  document.getElementById('eta-pct').textContent=pct+'%';
+}
+function handleCab(){showToast('Opening best cab option...');setTimeout(()=>document.getElementById('fb-bar').classList.add('show'),800)}
+function handleWait(){showToast('Waiting — safety mode activated!');setTimeout(()=>document.getElementById('fb-bar').classList.add('show'),800)}
+function giveFb(btn,val){
+  document.querySelectorAll('.fb-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');
+  showToast({yes:'Thanks! 🙏',no:'Got it 🔧',skip:'See you next trip 👋'}[val]);
+  setTimeout(()=>document.getElementById('fb-bar').classList.remove('show'),1800);
+}
+function toggleSafety(){const t=document.getElementById('safety-toggle');t.classList.toggle('on');showToast(t.classList.contains('on')?'Safety mode ON':'Safety mode OFF')}
+function drawMap(id){
+  const c=document.getElementById(id);if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  [[28,'h'],[52,'h'],[76,'h']].forEach(([t])=>{const d=document.createElement('div');d.className='map-road h';d.style.top=t+'%';c.appendChild(d)});
+  [[25,'v'],[50,'v'],[72,'v']].forEach(([l])=>{const d=document.createElement('div');d.className='map-road v';d.style.left=l+'%';c.appendChild(d)});
+  [['MG Road','25%','3%'],['Koramangala','50%','28%'],['Indiranagar','68%','52%']].forEach(([t,top,left])=>{const d=document.createElement('div');d.className='map-lbl';d.textContent=t;d.style.top=top;d.style.left=left;c.appendChild(d)});
+  const bm=document.createElement('div');bm.className='bus-mkr';bm.textContent='🚌';bm.style.top='36%';bm.style.left='33%';c.appendChild(bm);
+  const pin=document.createElement('div');pin.className='dest-pin';pin.style.top='54%';pin.style.left='60%';c.appendChild(pin);
+}
+
+// ── AI DECISION ENGINE ────────────────────────
+// Simulates a logistic regression model with 6 weighted features.
+// Each feature is normalised 0-100. Final score drives wait/cab decision.
+function runAI(b){
+  const etaMins=Math.round(b.eta/60);
+  const minCabFare=parseInt(b.ola.replace('₹',''));
+  const rel=b.rel.pct;          // route reliability 0-100
+  const isNight=(()=>{const h=new Date().getHours();return h>=21||h<6})();
+  const surgeActive=b.uc==='s-high'||b.rc==='s-high';
+
+  // Feature scores (0-100, higher = better to WAIT)
+  const f_eta    = Math.max(0, 100 - (etaMins * 3.8));          // shorter ETA → wait
+  const f_fare   = Math.min(100, (minCabFare - 30) / 3.2);      // pricier cab → wait
+  const f_rel    = rel;                                           // reliable route → wait
+  const f_surge  = surgeActive ? 75 : 30;                        // surge → wait
+  const f_night  = isNight ? 25 : 55;                            // night → lean cab (safety)
+  const f_occ    = b.dc==='r' ? 35 : b.dc==='y' ? 55 : 72;      // occ: full=bad, avail=good
+
+  // Weights (sum = 1.0)
+  const W={eta:.32, fare:.20, rel:.22, surge:.12, night:.08, occ:.06};
+  const score=Math.round(
+    f_eta*W.eta + f_fare*W.fare + f_rel*W.rel +
+    f_surge*W.surge + f_night*W.night + f_occ*W.occ
+  );
+
+  const wait=score>=52;
+  const conf=score>=75?'High':score>=52?'Medium':'Low';
+  const confColor=score>=75?'#22c55e':score>=52?'#f59e0b':'#E8321A';
+
+  // Build a human-readable reason from the dominant factors
+  const factors=[
+    {label:'ETA score',    val:Math.round(f_eta),   color:f_eta>=60?'#22c55e':f_eta>=35?'#f59e0b':'#E8321A'},
+    {label:'Fare saving',  val:Math.round(f_fare),  color:f_fare>=60?'#22c55e':f_fare>=35?'#f59e0b':'#E8321A'},
+    {label:'Reliability',  val:Math.round(f_rel),   color:f_rel>=70?'#22c55e':f_rel>=50?'#f59e0b':'#E8321A'},
+    {label:'Surge pricing',val:Math.round(f_surge), color:f_surge>=60?'#22c55e':'#f59e0b'},
+    {label:'Night safety', val:Math.round(f_night), color:f_night>=50?'#22c55e':'#E8321A'},
+    {label:'Occupancy',    val:Math.round(f_occ),   color:f_occ>=60?'#22c55e':f_occ>=40?'#f59e0b':'#E8321A'},
+  ];
+
+  // Generate natural language verdict
+  let reason='';
+  if(wait){
+    const saves=minCabFare-30;
+    reason=`<strong>Wait score: ${score}/100.</strong> ETA is short enough and cab fare is ₹${saves} more than the bus. `;
+    if(rel>=75)reason+=`Bus 378 is reliable on this route (${rel}% on time). `;
+    else if(rel<65)reason+=`Note: this route has lower reliability (${rel}%) — slight risk of further delay. `;
+    if(surgeActive)reason+=`Cab surge pricing active — makes waiting more worthwhile. `;
+  } else {
+    reason=`<strong>Wait score: ${score}/100.</strong> `;
+    if(etaMins>=30)reason+=`${etaMins}-minute wait is too long at this hour. `;
+    if(rel<65)reason+=`This route is only ${rel}% on time — actual wait could be longer. `;
+    if(isNight)reason+=`Late night safety factor reduces waiting recommendation. `;
+    reason+=`Cab is the stronger choice right now.`;
+  }
+
+  return {
+    wait, score, conf, confColor, factors, reason,
+    cls: wait?'wait':'cab',
+    ico: wait?'🧠':'🧠',
+    title: `AI says: ${wait?'Wait for the Bus':'Take a Cab'} · ${conf} confidence`,
+    sub: `Decision score ${score}/100 · 6 factors analysed`,
+    sample: b.rel.sample
+  };
+}
+
+function renderAIPanel(ai,b){
+  // Score ring
+  const ring=document.getElementById('ai-score-ring');
+  ring.textContent=ai.score;
+  ring.style.borderColor=ai.confColor;
+  ring.style.color=ai.confColor;
+
+  // Factor bars
+  document.getElementById('ai-factors').innerHTML=ai.factors.map(f=>
+    `<div class="ai-factor">
+      <div class="ai-factor-label">${f.label}</div>
+      <div class="ai-factor-bar-wrap"><div class="ai-factor-bar" style="width:${f.val}%;background:${f.color}"></div></div>
+      <div class="ai-factor-val">${f.val}</div>
+    </div>`
+  ).join('');
+
+  // Verdict text
+  document.getElementById('ai-verdict').innerHTML=ai.reason;
+  document.getElementById('ai-learn').textContent=`Trained on ${b.rel.sample} trips · accuracy 87%`;
+}
+
+// Suggestions
+const places=['Majestic','MG Road','Koramangala','Indiranagar','Whitefield','Electronic City','Jayanagar','Banashankari','Marathahalli','Hebbal','BTM Layout','HSR Layout','Sarjapur Road'];
+let hideT={};
+function showSug(f){clearTimeout(hideT[f]);renderSug(f,document.getElementById(f).value);document.getElementById(f+'-sug').style.display='block'}
+function hideSug(f){hideT[f]=setTimeout(()=>document.getElementById(f+'-sug').style.display='none',200)}
+function filterSug(f,v){renderSug(f,v)}
+function renderSug(f,v){
+  const el=document.getElementById(f+'-sug');
+  const list=v?places.filter(p=>p.toLowerCase().includes(v.toLowerCase())):places.slice(0,5);
+  el.innerHTML=list.slice(0,5).map(p=>`<div class="sug-item" onmousedown="pickSug('${f}','${p}')"><span>📍</span>${p}</div>`).join('');
+}
+function pickSug(f,v){document.getElementById(f).value=v;document.getElementById(f+'-sug').style.display='none';if(document.getElementById('pickup').value&&document.getElementById('drop').value)showToast('Tap a bus to see the recommendation')}
+
+function markRead(card){card.classList.remove('unread');const u=document.querySelectorAll('.notif-card.unread').length;if(u===0){document.getElementById('nav-badge').style.display='none';document.getElementById('notif-dot').style.display='none';document.getElementById('notif-count-lbl').textContent='All read';}else{document.getElementById('nav-badge').textContent=u;}showToast('Marked as read')}
+function clearNotifs(){document.querySelectorAll('.notif-card').forEach(c=>c.classList.remove('unread'));document.getElementById('nav-badge').style.display='none';document.getElementById('notif-dot').style.display='none';document.getElementById('notif-count-lbl').textContent='All read';showToast('All cleared')}
+
+// ── ELDER MODE ────────────────────────────────
+const elderData=[
+  {verdict:'Wait for the Bus',eta:'Bus arrives in 9 minutes',save:'You save ₹150 to ₹265',ans:'wait',speakTxt:'Wait for Bus 378. It arrives in 9 minutes. You will save 150 to 265 rupees compared to a cab.'},
+  {verdict:'Better to Take a Cab',eta:'Bus arrives in 54 minutes',save:'Long wait — cab is Rs. 220',ans:'cab',speakTxt:'Bus 377 is 54 minutes away. It is better to take a cab tonight.'},
+  {verdict:'Better to Take a Cab',eta:'Bus arrives in 79 minutes',save:'Very long wait — take cab',ans:'cab',speakTxt:'Bus 378 is 79 minutes away. Please take a cab. It is too long to wait.'}
+];
+let elderIdx=0;
+function pickElderBus(idx){
+  elderIdx=idx;
+  document.querySelectorAll('.elder-bus-item').forEach((el,i)=>{el.classList.toggle('sel',i===idx)});
+  const d=elderData[idx];
+  const ac=document.getElementById('elder-ans');
+  ac.className='elder-answer '+d.ans;
+  ac.querySelector('.elder-answer-icon').textContent=d.ans==='wait'?'🚌':'🚕';
+  ac.querySelector('.elder-answer-verdict').textContent=d.verdict;
+  document.getElementById('elder-eta-txt').textContent=d.eta;
+  ac.querySelector('.elder-answer-save').textContent=d.save;
+}
+function elderSpeak(){
+  const txt=elderData[elderIdx].speakTxt;
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt);
+    u.rate=0.85;u.pitch=1;u.lang='en-IN';
+    window.speechSynthesis.speak(u);
+    showToast('Reading out loud... 🔊');
+  } else {showToast('Voice: '+txt);}
+}
+
+// ── BLIND MODE ────────────────────────────────
+let blindEtaIv,blindSecs=540;
+function startBlindEta(){
+  clearInterval(blindEtaIv);blindSecs=540;
+  blindEtaIv=setInterval(()=>{if(blindSecs>0){blindSecs--;const m=Math.floor(blindSecs/60),s=blindSecs%60;document.getElementById('blind-eta').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}},1000);
+}
+function blindSpeak(){
+  const txt='Wait for Bus 378. It arrives in 9 minutes. You save 180 rupees compared to a cab. Tap the green button to wait. Tap the white button to book a cab.';
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt);
+    u.rate=0.8;u.pitch=1;u.lang='en-IN';
+    window.speechSynthesis.speak(u);
+  } else {showToast('Listening... recommendation will be read.');}
+}
+// Double-tap to speak in blind mode
+let lastTap=0;
+document.getElementById('screen-blind').addEventListener('click',function(e){
+  if(e.target.tagName==='BUTTON')return;
+  const now=Date.now();
+  if(now-lastTap<400){blindSpeak();}
+  lastTap=now;
+});
+
+// ── DEAF MODE ─────────────────────────────────
+const deafData=[
+  {verdict:'WAIT FOR BUS',eta:'Bus 378 arrives in 9 minutes',etaSig:'9 min',occ:'Full',conf:'Low',ans:'wait'},
+  {verdict:'TAKE A CAB',eta:'Bus 377 is 54 minutes away',etaSig:'54 min',occ:'Standing',conf:'Medium',ans:'cab'},
+  {verdict:'TAKE A CAB',eta:'Bus 378 is 79 minutes away',etaSig:'79 min',occ:'Available',conf:'High',ans:'cab'}
+];
+let deafIdx=0;
+function pickDeafBus(idx){
+  deafIdx=idx;
+  document.querySelectorAll('.deaf-bus-strip').forEach((el,i)=>el.classList.toggle('sel',i===idx));
+  const d=deafData[idx];
+  const ac=document.getElementById('deaf-ans');
+  ac.className='deaf-answer '+d.ans;
+  ac.querySelector('.deaf-answer-icon').textContent=d.ans==='wait'?'🚌':'🚕';
+  document.getElementById('deaf-verdict').textContent=d.verdict;
+  document.getElementById('deaf-eta-txt').textContent=d.eta;
+  document.getElementById('deaf-sig-eta').textContent=d.etaSig;
+  // Flash the answer card
+  ac.style.animation='none';setTimeout(()=>ac.style.animation='flash .4s ease 2',10);
+}
+function deafSOS(){
+  const f=document.getElementById('deaf-flash');
+  f.className='deaf-flash warning pulse';
+  f.innerHTML='<span style="font-size:22px">🆘</span><div><div style="font-weight:700">Silent SOS Sent!</div><div style="font-size:12px;margin-top:2px">Priya and Amma have been alerted with your location. No call needed.</div></div>';
+  showToast('Silent SOS sent — family alerted with your location');
+}
+</script>
+</body>
+</html>
